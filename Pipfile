@@ -9,6 +9,8 @@ django-debug-toolbar = "*"
 djangorestframework = "*"
 markdown = "*"
 django-filter = "*"
+django-rest-knox = "*"
+djangorestframework-simplejwt = "*"
 
 [dev-packages]
 

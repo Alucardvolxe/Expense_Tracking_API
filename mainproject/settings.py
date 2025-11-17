@@ -38,9 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     ## installed app
-    'Accounts',
+    'api',
     'rest_framework',
     'debug_toolbar',
+    'knox',
+    'rest_framework.authtoken'
 ]
 
 INTERNAL_IPS = [
@@ -134,7 +136,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        #'rest_framework.authentication.BasicAuthentication',
+        #'rest_framework.authentication.SessionAuthentication',
+        'knox.auth.TokenAuthentication',
     ]
 }
