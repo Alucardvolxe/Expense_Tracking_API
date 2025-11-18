@@ -6,11 +6,11 @@ name = "pypi"
 [packages]
 django = "*"
 django-debug-toolbar = "*"
-djangorestframework = "*"
 markdown = "*"
 django-filter = "*"
 django-rest-knox = "*"
 djangorestframework-simplejwt = "*"
+djangorestframework = "*"
 
 [dev-packages]
 
