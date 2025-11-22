@@ -12,6 +12,11 @@ class ExpensesSerializer(serializers.ModelSerializer):
         model = Expenses
         fields = ('name','amount_spent','category','date_added')
     
+    def validate_amount_spent():
+        if 'amount_spent'<0 or 'amount_spent>999999':
+            raise serializers.ValidationError(
+                'Price must be in the range of 1 and 999999'
+            )
 
 
 

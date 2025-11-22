@@ -1,12 +1,21 @@
 from django_filters.rest_framework import DjangoFilterBackend
 # Create your views here.
-from rest_framework import generics, filters
+from rest_framework import generics, filters,response
 from .models import Category,Expenses
 from .serializers import CategorySerializer, ExpensesSerializer
-from .filters import ExpensesFilter
-
+from .filters import ExpensesFilter , Expense_summary
+import logging
+from django.db.models import Sum
+from rest_framework.views import APIView
+from django.db.models.functions import ExtractMonth ,ExtractYear
 
 #CRUD FUNCTIONS 
+logger = logging.getLogger(__name__)
+
+
+
+
+
 class ExpenseList(generics.ListAPIView):
     queryset=Expenses.objects.all()
     serializer_class = ExpensesSerializer
@@ -33,6 +42,7 @@ class ExpenseCreate(generics.CreateAPIView):
 
 
 class ExpenseDetail(generics.RetrieveUpdateDestroyAPIView):
+    logger.info('Expense detail log')
     serializer_class=ExpensesSerializer
     queryset = Expenses.objects.all()
 
@@ -102,12 +112,37 @@ def test_token(request):
 
 
 
-##FILTERING
+##Summary views
 
 
+class ExpensesSummaryview(generics.ListAPIView):
+    queryset = Expenses.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = Expense_summary
 
+    def list(self, request, *args, **kwargs):
+        qs = self.filter_queryset(self.get_queryset())
+        period = request.query_params.get("period", "").lower()
 
+        if period == "month":
+            data = (
+                qs.annotate(month=ExtractMonth("date_added"))
+                  .values("month")
+                  .annotate(total=Sum("amount_spent"))
+                  .order_by("month")
+            )
+        elif period == "year":
+            data = (
+                qs.annotate(year=ExtractYear("date_added"))
+                  .values("year")
+                  .annotate(total=Sum("amount_spent"))
+                  .order_by("year")
+            )
+        else:
+            data = {'Summary':"all time",
+                "total": qs.aggregate(total=Sum("amount_spent"))["total"]}
 
+        return Response(data)
 
 
 
