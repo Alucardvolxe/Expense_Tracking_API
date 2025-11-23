@@ -31,8 +31,10 @@ class YearSummarySerializer(serializers.Serializer):
     year = serializers.CharField(max_length=7, required=False)
     total_for_year = serializers.DictField(child=serializers.DictField())
     yearly_totals = serializers.DictField() 
-    
+
 class UserSerialzer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username','password','email']
+
+        
