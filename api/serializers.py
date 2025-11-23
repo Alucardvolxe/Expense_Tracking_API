@@ -18,8 +18,20 @@ class ExpensesSerializer(serializers.ModelSerializer):
                 'Price must be in the range of 1 and 999999'
             )
 
+class CategorySummarySerializer(serializers.ModelSerializer):
+    category_title = serializers.CharField(max_length=255)
+    category_total_spent=serializers.DecimalField(max_digits=10,decimal_places=2)
 
+class MonthSummarySerializer(serializers.Serializer):
+    month = serializers.CharField()
+    total_for_month = serializers.DictField(child=serializers.DictField())
+    total_spent=serializers.DecimalField(max_digits=10,decimal_places=2)
 
+class YearSummarySerializer(serializers.Serializer):
+    year = serializers.CharField(max_length=7, required=False)
+    total_for_year = serializers.DictField(child=serializers.DictField())
+    yearly_totals = serializers.DictField() 
+    
 class UserSerialzer(serializers.ModelSerializer):
     class Meta:
         model = User

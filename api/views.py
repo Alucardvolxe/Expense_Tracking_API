@@ -2,10 +2,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 # Create your views here.
 from rest_framework import generics, filters,response
 from .models import Category,Expenses
-from .serializers import CategorySerializer, ExpensesSerializer
-from .filters import ExpensesFilter , Expense_summary
+from .serializers import CategorySerializer, ExpensesSerializer,MonthSummarySerializer,YearSummarySerializer
+from .filters import ExpensesFilter , ExpensesummaryFilter
 import logging
-from django.db.models import Sum
+from django.db.models import Sum ,Aggregate
 from rest_framework.views import APIView
 from django.db.models.functions import ExtractMonth ,ExtractYear
 
@@ -21,15 +21,7 @@ class ExpenseList(generics.ListAPIView):
     serializer_class = ExpensesSerializer
     filterset_class = ExpensesFilter
    
-    # def get_queryset(self):
-    #     queryset = Expenses.objects.all()
-    #     category = self.request.query_params.get('category')
-
-    #     if category is not None:
-    #         queryset= queryset.filter(Category=category)
-
-        
-    #     return queryset
+   
     
      
 
@@ -115,36 +107,96 @@ def test_token(request):
 ##Summary views
 
 
-class ExpensesSummaryview(generics.ListAPIView):
+
+
+
+class MonthlySummaryExpenses(generics.GenericAPIView):
+    serializer_class = MonthSummarySerializer
     queryset = Expenses.objects.all()
     filter_backends = [DjangoFilterBackend]
-    filterset_class = Expense_summary
+    filterset_class = ExpensesummaryFilter
 
-    def list(self, request, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
+        
         qs = self.filter_queryset(self.get_queryset())
-        period = request.query_params.get("period", "").lower()
 
-        if period == "month":
-            data = (
-                qs.annotate(month=ExtractMonth("date_added"))
-                  .values("month")
-                  .annotate(total=Sum("amount_spent"))
-                  .order_by("month")
-            )
-        elif period == "year":
-            data = (
-                qs.annotate(year=ExtractYear("date_added"))
-                  .values("year")
-                  .annotate(total=Sum("amount_spent"))
-                  .order_by("year")
-            )
-        else:
-            data = {'Summary':"all time",
-                "total": qs.aggregate(total=Sum("amount_spent"))["total"]}
+        
+        category_totals = qs.values('category__title').annotate(
+            category_total=Sum('amount_spent')
+        )
+       
+       
+        total_for_month = {
+            item['category__title']: {
+                "category__title": item['category__title'],
+                "category_total": item['category_total']
+            } for item in category_totals
+        }
 
-        return Response(data)
+        month = request.query_params.get('month')
+        total_spent = qs.aggregate(total=Sum('amount_spent'))['total'] or Decimal('0')
+        data_display = {
+            'month': month,
+            'total_spent':total_spent,
+            'total_for_month': total_for_month,
+        }
 
+        serializer = self.get_serializer(data_display)
+        return Response(serializer.data)
 
+class YearlySummaryExpenses(generics.GenericAPIView):
+    serializer_class = YearSummarySerializer  
+    queryset = Expenses.objects.all()
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ExpensesummaryFilter
+
+    def get(self, request, *args, **kwargs):
+        
+        qs = self.filter_queryset(self.get_queryset())
+
+        
+        year_param = request.query_params.get('year')
+        if year_param:
+            qs = qs.filter(date_added__year=int(year_param))
+
+        
+        yearly_category_totals = (
+            qs.annotate(year=ExtractYear('date_added'))
+              .values('year', 'category__title')
+              .annotate(category_total=Sum('amount_spent'))
+              .order_by('year', 'category__title')
+        )
+
+       
+        total_for_year = {}
+        for item in yearly_category_totals:
+            yr = str(item['year'])
+            cat_title = item['category__title']
+            cat_total = float(item['category_total'])  
+            if yr not in total_for_year:
+                total_for_year[yr] = {}
+
+            total_for_year[yr][cat_title] = {
+                "category__title": cat_title,
+                "category_total": cat_total
+            }
+
+        
+        yearly_totals = {}
+        years = qs.annotate(year=ExtractYear('date_added')).values_list('year', flat=True).distinct()
+        for yr in years:
+            total = qs.filter(date_added__year=yr).aggregate(total=Sum('amount_spent'))['total'] or Decimal('0')
+            yearly_totals[str(yr)] = float(total)
+
+        
+        data_display = {
+        "year": year_param,
+        "yearly_totals": yearly_totals , 
+        "total_for_year": total_for_year,
+        }
+
+        serializer = self.get_serializer(data_display)
+        return Response(serializer.data)
 
 
 

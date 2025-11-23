@@ -11,7 +11,7 @@ class Category(models.Model):
     
 class Expenses(models.Model):
     name = models.CharField(max_length=200)
-    amount_spent= models.DecimalField(max_digits=6,decimal_places=2, blank=True, null=True)
+    amount_spent= models.DecimalField(max_digits=10,decimal_places=2, blank=True, null=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     date_added = models.DateField(auto_now_add=True)
     note = models.TextField()
