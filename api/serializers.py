@@ -13,14 +13,11 @@ class ExpensesSerializer(serializers.ModelSerializer):
         fields = ('name','amount_spent','category','date_added')
     
     def validate_amount_spent():
-        if 'amount_spent'<0 or 'amount_spent>999999':
+        if 'amount_spent'<0 or 'amount_spent>9999999999':
             raise serializers.ValidationError(
-                'Price must be in the range of 1 and 999999'
+                'Price must be in the range of 1 and 9999999999'
             )
 
-class CategorySummarySerializer(serializers.ModelSerializer):
-    category_title = serializers.CharField(max_length=255)
-    category_total_spent=serializers.DecimalField(max_digits=10,decimal_places=2)
 
 class MonthSummarySerializer(serializers.Serializer):
     month = serializers.CharField()
