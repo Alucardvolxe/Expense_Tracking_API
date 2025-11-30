@@ -8,7 +8,7 @@ import logging
 from django.db.models import Sum ,Aggregate
 from rest_framework.views import APIView
 from django.db.models.functions import ExtractMonth ,ExtractYear
-
+from rest_framework.permissions import IsAuthenticated
 #CRUD FUNCTIONS 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +17,15 @@ logger = logging.getLogger(__name__)
 
 
 class ExpenseList(generics.ListAPIView):
-    queryset=Expenses.objects.all()
+    
     serializer_class = ExpensesSerializer
     filterset_class = ExpensesFilter
-   
-   
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        
+        return Expenses.objects.filter(user=self.request.user)
+
     
      
 
@@ -34,9 +38,11 @@ class ExpenseCreate(generics.CreateAPIView):
 
 
 class ExpenseDetail(generics.RetrieveUpdateDestroyAPIView):
-    logger.info('Expense detail log')
+    
     serializer_class=ExpensesSerializer
     queryset = Expenses.objects.all()
+
+
 
 
 
@@ -50,10 +56,11 @@ class CreateCategory(generics.CreateAPIView):
    
 
 
-
 class CategoryDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
+
+
 
 
 
@@ -84,13 +91,27 @@ def login(request):
 
 @api_view(['POST'])
 def signup(request):
+    if User.objects.filter(username=request.data.get('username')).exists():
+        return Response(
+            {
+                "detail":"Username already exists"
+            },
+                status=status.HTTP_400_BAD_REQUEST
+        )
+    if User.objects.filter(username=request.data.get('email')).exists():
+        return Response(
+            {
+                "detail":"Email already exists"
+            },
+                status=status.HTTP_400_BAD_REQUEST
+        )
     serializer = UserSerialzer(data = request.data)
     if serializer.is_valid():
         serializer.save()
         user = User.objects.get(username = request.data['username'])
         user.set_password(request.data['password'])
         user.save()
-        token = Token.objects.create(user=user)
+        token = Token.objects.get_or_create(user=user)
         return Response({"token":token.key, "user": serializer.data})
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
