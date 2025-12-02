@@ -1,26 +1,55 @@
 from rest_framework import serializers
 from .models import Expenses, Category
 from django.contrib.auth.models import User
+class UserSerialzer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length = 200)
+    password = serializers.CharField(write_only = True)
+    email = serializers.EmailField()
+    class Meta:
+        model = User
+        fields = ['id', 'username','password','email']
+
+
+class UsersignupSerialzer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username','password','email']
+
+class UserlogintSerialzer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length = 200)
+    password = serializers.CharField(max_length = 200)
+    email = serializers.EmailField()
+    class Meta:
+        model = User
+        fields = ['id', 'username','email']
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['title']
 
 class ExpensesSerializer(serializers.ModelSerializer):
-    category = CategorySerializer()
+   
+    category = CategorySerializer(read_only=True)
+    
+    category_data = serializers.DictField(write_only=True)
+
     class Meta:
         model = Expenses
-        fields = ('name','amount_spent','category','date_added')
-    
-    def validate_amount_spent():
-        if 'amount_spent'<0 or 'amount_spent>999999':
-            raise serializers.ValidationError(
-                'Price must be in the range of 1 and 999999'
-            )
+        fields = ('name','note', 'amount_spent', 'category', 'category_data', 'date_added', 'user')
 
-class CategorySummarySerializer(serializers.ModelSerializer):
-    category_title = serializers.CharField(max_length=255)
-    category_total_spent=serializers.DecimalField(max_digits=10,decimal_places=2)
+    def create(self, validated_data):
+        category_input = validated_data.pop('category_data')
+        category, _ = Category.objects.get_or_create(title=category_input['title'])
+        expense = Expenses.objects.create(category=category, **validated_data)
+        return expense
+    
+    def validate_amount_spent(self,value):
+        if value<0 or value>9999999999:
+            raise serializers.ValidationError(
+                'Price must be in the range of 1 and 9999999999'
+            )
+        return value
 
 class MonthSummarySerializer(serializers.Serializer):
     month = serializers.CharField()
@@ -31,8 +60,6 @@ class YearSummarySerializer(serializers.Serializer):
     year = serializers.CharField(max_length=7, required=False)
     total_for_year = serializers.DictField(child=serializers.DictField())
     yearly_totals = serializers.DictField() 
-    
-class UserSerialzer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ['id', 'username','password','email']
+
+
+        

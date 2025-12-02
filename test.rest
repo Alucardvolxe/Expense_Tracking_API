@@ -1,16 +1,61 @@
-POST http://127.0.0.1:8000/login
+POST http://127.0.0.1:8000/api/login
 Content-Type: application/json
 
-{"username":"Yeboah", "password":"Pass1234!"}
+{"username":"Daniel", "password":"Pass1234!"}
 
 ###
 
-POST http://127.0.0.1:8000/signup
+POST http://127.0.0.1:8000/api/signup
 Content-Type: application/json
 
-{"username":"Daniel", "password":"Pass1234!", "email":"modaniel167@gmail.com"}
+{"username":"Kofi", "password":"Pass1234!", "email":"moaniel167@gmail.com"}
+
 
 ###
-GET  http://127.0.0.1:8000/test_token
+GET http://127.0.0.1:8000/api/expenses
+Authorization: Token e0637ce7ca3516ec4434d059831d45747c4702e8
+
+
+### filtering 
+GET http://127.0.0.1:8000/api/expenses/?name__contains=&name=&category=1&amount_spent__range=&amount_spent__lt=&amount_spent__gt=&amount_spent=&date_added__month=&date_added__day=&date_added__year=&date_added__range=
+Authorization: Token e0637ce7ca3516ec4434d059831d45747c4702e8
+
+###
+POST http://127.0.0.1:8000/api/expense/create
 Content-Type: application/json
-Authorization: Token e8f87d8f082070780f78b4e4c091f992d26d09f1
+Authorization: Token e0637ce7ca3516ec4434d059831d45747c4702e8
+
+{"name":"new2",
+"amount_spent":50,
+"note":"new1",
+"category_data":{"title":"yes"},
+"date_added":"2025-11-21",
+"user":1}
+
+###
+PATCH  http://127.0.0.1:8000/api/expense/detail/2/
+Content-Type: application/json
+Authorization: Token e0637ce7ca3516ec4434d059831d45747c4702e8
+
+{
+    "name":"Banku"
+}
+
+###
+GET http://127.0.0.1:8000/api/categories/
+Content-Type: application/json
+Authorization: Token e0637ce7ca3516ec4434d059831d45747c4702e8
+
+###
+POST http://127.0.0.1:8000/api/category/create
+Content-Type: application/json
+Authorization: Token e0637ce7ca3516ec4434d059831d45747c4702e8
+{"title":"one"}
+
+
+###
+GET http://127.0.0.1:8000/api/expense/summary/month?month=11
+Authorization: Token e0637ce7ca3516ec4434d059831d45747c4702e8
+###
+GET http://127.0.0.1:8000/api/expense/summary/year?year=2025
+Authorization: Token e0637ce7ca3516ec4434d059831d45747c4702e8
