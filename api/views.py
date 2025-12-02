@@ -33,7 +33,7 @@ class ExpenseList(generics.ListAPIView):
 
 class ExpenseCreate(generics.CreateAPIView):
     serializer_class = ExpensesSerializer
-
+    permission_classes =[IsAuthenticated]
 
 
 
@@ -41,7 +41,15 @@ class ExpenseDetail(generics.RetrieveUpdateDestroyAPIView):
     
     serializer_class=ExpensesSerializer
     queryset = Expenses.objects.all()
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        
+        return Expenses.objects.filter(user=self.request.user)
 
+
+    
+     
 
 
 
@@ -49,16 +57,28 @@ class ExpenseDetail(generics.RetrieveUpdateDestroyAPIView):
 class CategoryList(generics.ListAPIView):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        
+        return Category.objects.filter(user=self.request.user)
+
 
 
 class CreateCategory(generics.CreateAPIView):
     serializer_class = CategorySerializer
-   
+    permission_classes = [IsAuthenticated]
 
 
 class CategoryDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = CategorySerializer
     queryset = Category.objects.all()
+    queryset = Category.objects.all()
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        
+        return Category.objects.filter(user=self.request.user)
 
 
 
@@ -83,7 +103,7 @@ from rest_framework.permissions import IsAuthenticated
 def login(request):
     user = get_object_or_404(User, username = request.data['username'])
     if not user.check_password(request.data['password']):
-        return Response({"detail":"Not found."}, status = status.HTTP_404_NOT_FOUND)
+        return Response({"detail":"wrong username or password"}, status = status.HTTP_404_NOT_FOUND)
     token, created = Token.objects.get_or_create(user = user)
     serializer = UserSerialzer(instance=user)
     return Response({"token":token.key, "user":serializer.data})

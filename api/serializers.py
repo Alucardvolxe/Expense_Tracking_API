@@ -2,9 +2,27 @@ from rest_framework import serializers
 from .models import Expenses, Category
 from django.contrib.auth.models import User
 class UserSerialzer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length = 200)
+    password = serializers.CharField(write_only = True)
+    email = serializers.EmailField()
     class Meta:
         model = User
         fields = ['id', 'username','password','email']
+
+
+class UsersignupSerialzer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username','password','email']
+
+class UserlogintSerialzer(serializers.ModelSerializer):
+    username = serializers.CharField(max_length = 200)
+    password = serializers.CharField(max_length = 200)
+    email = serializers.EmailField()
+    class Meta:
+        model = User
+        fields = ['id', 'username','email']
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
